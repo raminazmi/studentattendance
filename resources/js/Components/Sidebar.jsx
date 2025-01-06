@@ -32,7 +32,7 @@ export default function Sidebar({role, className}) {
       ];
 
   return (
-    <div className={`flex flex-col ${className} ${isDark ? 'bg-DarkBG2' : 'bg-LightBG2'} w-64 border-gray-200`} style={{ height: "calc(100vh - 66px)" }}>
+    <div className={`flex flex-col min-w-[230px] ${className} ${isDark ? 'bg-DarkBG2' : 'bg-LightBG2'} border-gray-200`} style={{ height: "calc(100vh - 66px)" }}>
       <nav className="flex-1 px-2 py-6 space-y-1">
         {navigation.map((item) => (
           <Link
