@@ -20,7 +20,7 @@ export default function Authenticated({ user, header, children }) {
     const t = translations[language];
 
     return (
-        <div className="h-screen" dir={language === 'ar' ? 'rtl' : 'ltr'}>
+        <div className="h-screen font-almarai" dir={language === 'ar' ? 'rtl' : 'ltr'}>
             <nav className={`border-b-[2px] ${isDark ? 'bg-DarkBG1 border-TextDark text-TextLight' : 'bg-LightBG1 border-LightBG3 text-TextDark'}`}>
                 <div className="mx-auto px-4 sm:px-6 lg:px-8">
                     <div className="flex justify-between h-16">
@@ -28,7 +28,7 @@ export default function Authenticated({ user, header, children }) {
                             <div className="shrink-0 flex items-center">
                                 <Link href="/admin/dashboard/home" className="flex items-center">
                                     <ApplicationLogo width="50px" />
-                                    <span className="mx-2 text-lg font-semibold font-sans mx-2">
+                                    <span className="mx-2 text-lg font-semibold font-almarai mx-2">
                                         {t['MZ']}
                                     </span>
                                 </Link>
@@ -127,9 +127,9 @@ export default function Authenticated({ user, header, children }) {
                 </header>
             )}
 
-            <div className={`${isDark ? 'bg-DarkBG2' : 'bg-LightBG2'} flex`}>
+            <div className={`${isDark ? 'bg-DarkBG2' : 'bg-LightBG2'} flex `}>
                 <Sidebar className={`${showingSidebar ? 'block' : 'hidden'} sm:block`} role={user.role} />
-                <main className="flex-1">{children}</main>
+                <main className="flex-1 overflow-x-auto">{children}</main>
             </div>
         </div>
     );

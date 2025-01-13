@@ -8,7 +8,7 @@ export default function Guest({ children }) {
     const language = useSelector((state) => state.language.current);
     const t = translations[language];
     return (
-        <div className={`min-h-screen flex flex-col sm:justify-center items-center pt-6 sm:pt-0 ${isDark ? 'bg-DarkBG1' : 'bg-LightBG2'} `}  dir={language === 'ar' ? 'rtl' : 'ltr'}>
+        <div className={`font-almarai min-h-screen flex flex-col sm:justify-center items-center pt-6 sm:pt-0 ${isDark ? 'bg-DarkBG1' : 'bg-LightBG2'} `}  dir={language === 'ar' ? 'rtl' : 'ltr'}>
 
 
             <div className={`w-full sm:max-w-md mt-6 px-6 py-4 shadow-md overflow-hidden sm:rounded-lg ${isDark ? 'bg-DarkBG3' : 'bg-LightBG1'}`} >

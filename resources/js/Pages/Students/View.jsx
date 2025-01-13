@@ -28,7 +28,6 @@ export default function StudentsViewPage({ auth, students, classes, classId }) {
         { key: 'phone', label: t['phone'], sortable: true },
         { key: 'parent_whatsapp', label: t['parent_whatsapp'], sortable: true },
         { key: 'cycle', label: t['cycle'], sortable: true },
-        { key: 'grades', label: t['grades'], sortable: true },
         { key: 'path', label: t['path'], sortable: true },
     ];
 
@@ -41,7 +40,6 @@ export default function StudentsViewPage({ auth, students, classes, classId }) {
             phone: student.phone,
             parent_whatsapp: student.parent_whatsapp,
             cycle: student.cycle,
-            grades: student.grades,
             path: student.path,
         };
     });
@@ -97,7 +95,7 @@ export default function StudentsViewPage({ auth, students, classes, classId }) {
                                 selectable={true}
                                 actions={true}
                                 onEdit={handleEdit}
-                                onDelete={handleDelete}
+                                onDelete={handleDelete}كىى
                             />
                         </div>
                     </div>

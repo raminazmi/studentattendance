@@ -52,6 +52,7 @@ class TeacherAttendanceController extends Controller
                 'message' => 'لا توجد فصول دراسية للمعلم.',
             ]);
         }
+
         $classesData = $classes->map(function ($class) {
             return [
                 'id' => $class->id,
@@ -61,13 +62,11 @@ class TeacherAttendanceController extends Controller
                 'students_count' => $class->students->count(),
             ];
         });
+
         return Inertia::render('Teachers/Dashboard/Attendance/Index', [
             'classes' => $classesData,
         ]);
     }
-
-
-
 
     public function viewAttendance($id, Request $request)
     {
@@ -117,64 +116,6 @@ class TeacherAttendanceController extends Controller
         ]);
     }
 
-    public function create()
-    {
-        $students = $this->student->select('id', 'name')->get();
-        $classes = $this->classRoom->select('id', 'name', 'section')->get();
-
-        return Inertia::render('Teachers/Dashboard/Attendance/Create', [
-            'students' => $students,
-            'classes' => $classes
-        ]);
-    }
-
-    public function store(Request $request)
-    {
-        try {
-            $validated = $this->validateAttendance($request);
-
-            $this->attendance->create($validated);
-
-            return Inertia::location(route('teacher.attendance.index'));
-        } catch (ValidationException $e) {
-            return $this->handleValidationException($e);
-        }
-    }
-
-    public function edit($id)
-    {
-        $attendance = $this->attendance->with(['student', 'class'])->findOrFail($id);
-        $students = $this->student->select('id', 'name')->get();
-        $classes = $this->classRoom->select('id', 'name', 'section')->get();
-
-        return Inertia::render('Teachers/Dashboard/Attendance/Edit', [
-            'attendance' => $attendance,
-            'students' => $students,
-            'classes' => $classes
-        ]);
-    }
-
-    public function update(Request $request, $id)
-    {
-        try {
-            $validated = $this->validateAttendance($request);
-            $attendance = $this->attendance->findOrFail($id);
-            $attendance->update($validated);
-
-            return Inertia::location(route('teacher.attendance.index'));
-        } catch (ValidationException $e) {
-            return $this->handleValidationException($e);
-        }
-    }
-
-    public function destroy($id)
-    {
-        $attendance = $this->attendance->findOrFail($id);
-        $attendance->delete();
-
-        return Inertia::location(route('teacher.attendance.index'));
-    }
-
     public function getAttendanceStats(Request $request)
     {
         $teacherEmail = Auth::user()->email;
@@ -182,6 +123,7 @@ class TeacherAttendanceController extends Controller
         if (!$teacher) {
             return response()->json(['message' => 'المعلم غير موجود'], 404);
         }
+
         $classIds = $teacher->classes->pluck('id');
         $period = $request->input('period', 'daily');
         $attendanceData = $this->getAttendanceData($period, $classIds);
@@ -195,18 +137,30 @@ class TeacherAttendanceController extends Controller
 
         if ($period == 'daily') {
             return $attendanceQuery->selectRaw('date, status, count(*) as count')
+                ->whereDate('date', now()->toDateString())
                 ->groupBy('date', 'status')
                 ->orderBy('date')
                 ->get();
         } elseif ($period == 'weekly') {
             return $attendanceQuery->selectRaw('WEEK(date) as week, status, count(*) as count')
+                ->whereBetween('date', [
+                    now()->startOfWeek()->toDateString(),
+                    now()->endOfWeek()->toDateString()
+                ])
                 ->groupByRaw('WEEK(date), status')
                 ->orderBy('week')
                 ->get();
         } elseif ($period == 'monthly') {
             return $attendanceQuery->selectRaw('MONTH(date) as month, status, count(*) as count')
+                ->whereMonth('date', now()->month)
                 ->groupByRaw('MONTH(date), status')
                 ->orderBy('month')
+                ->get();
+        } elseif ($period == 'yearly') {
+            return $attendanceQuery->selectRaw('YEAR(date) as year, status, count(*) as count')
+                ->whereYear('date', now()->year)
+                ->groupByRaw('YEAR(date), status')
+                ->orderBy('year')
                 ->get();
         }
 
@@ -219,6 +173,7 @@ class TeacherAttendanceController extends Controller
         $presentData = [];
         $absentData = [];
         $lateData = [];
+
         foreach ($attendanceData as $attendance) {
             if ($period == 'daily') {
                 $labels[] = $attendance->date;
@@ -226,7 +181,10 @@ class TeacherAttendanceController extends Controller
                 $labels[] = 'Week ' . $attendance->week;
             } elseif ($period == 'monthly') {
                 $labels[] = 'Month ' . $attendance->month;
+            } elseif ($period == 'yearly') {
+                $labels[] = 'Year ' . $attendance->year;
             }
+
             switch ($attendance->status) {
                 case self::STATUS_PRESENT:
                     $presentData[] = $attendance->count;
@@ -244,9 +202,9 @@ class TeacherAttendanceController extends Controller
 
         return [
             'stats' => [
-                'presentRate' => $totalCount > 0 ? round((array_sum($presentData) / $totalCount) * 100, 2) : 0, // نسبة الحضور
-                'absentRate' => $totalCount > 0 ? round((array_sum($absentData) / $totalCount) * 100, 2) : 0,  // نسبة الغياب
-                'lateRate' => $totalCount > 0 ? round((array_sum($lateData) / $totalCount) * 100, 2) : 0,      // نسبة التأخير
+                'presentRate' => $totalCount > 0 ? round((array_sum($presentData) / $totalCount) * 100, 2) : 0,
+                'absentRate' => $totalCount > 0 ? round((array_sum($absentData) / $totalCount) * 100, 2) : 0,
+                'lateRate' => $totalCount > 0 ? round((array_sum($lateData) / $totalCount) * 100, 2) : 0,
             ],
             'chart' => [
                 'labels' => $labels,
@@ -260,8 +218,8 @@ class TeacherAttendanceController extends Controller
     public function getAttendanceStatistics()
     {
         $teacherEmail = Auth::user()->email;
-
         $teacher = $this->teacher->where('email', $teacherEmail)->first();
+
         if ($teacher) {
             $classes = $teacher->classes;
             return response()->json([
@@ -275,45 +233,6 @@ class TeacherAttendanceController extends Controller
             'message' => 'المعلم غير موجود',
         ], 404);
     }
-
-    public function report(Request $request)
-    {
-        $attendances = $this->attendance->with(['student', 'class'])
-            ->when($request->date_from, fn($query) => $query->whereDate('date', '>=', $request->date_from))
-            ->when($request->date_to, fn($query) => $query->whereDate('date', '<=', $request->date_to))
-            ->get();
-
-        return Inertia::render('Teachers/Dashboard/Attendance/Report', [
-            'attendances' => $attendances
-        ]);
-    }
-
-    private function validateAttendance(Request $request)
-    {
-        return $request->validate([
-            'student_id' => ['required', 'exists:students,id'],
-            'class_id' => ['required', 'exists:classes,id'],
-            'date' => ['required', 'date'],
-            'status' => ['required', 'in:' . self::STATUS_PRESENT . ',' . self::STATUS_ABSENT . ',' . self::STATUS_LATE],
-            'notes' => ['nullable', 'string', 'max:255']
-        ], [
-            'student_id.required' => 'حقل الطالب مطلوب',
-            'student_id.exists' => 'الطالب المحدد غير موجود',
-            'class_id.required' => 'حقل الصف مطلوب',
-            'class_id.exists' => 'الصف المحدد غير موجود',
-            'date.required' => 'حقل التاريخ مطلوب',
-            'date.date' => 'يجب أن يكون التاريخ صالحًا',
-            'status.required' => 'حقل الحالة مطلوب',
-            'status.in' => 'حالة الحضور غير صالحة',
-            'notes.max' => 'يجب ألا تتجاوز الملاحظات 255 حرفًا'
-        ]);
-    }
-
-    private function handleValidationException(ValidationException $e)
-    {
-        return back()->withErrors($e->errors());
-    }
-
 
     public function export($id, Request $request)
     {
@@ -342,13 +261,13 @@ class TeacherAttendanceController extends Controller
         return Excel::download(new AttendanceExport($attendances), 'attendance_report.xlsx');
     }
 
-
     public function exportALL(Request $request)
     {
         $class_id = $request->input('class_id');
         if (!$class_id) {
             return response()->json(['message' => 'Class ID is required'], 400);
         }
+
         $classroom = ClassRoom::findOrFail($class_id);
 
         $attendances = Student::select(
@@ -380,24 +299,8 @@ class TeacherAttendanceController extends Controller
         return response()->json(['hasNullAttendance' => $hasNullAttendance]);
     }
 
-    public function attendance($id, Request $request)
-    {
-        $url = $request->fullUrl();
-        $urlParts = explode('/', $url);
-        $id = $urlParts[count($urlParts) - 2];
-        $classroom = ClassRoom::with('students')->findOrFail($id);
-        $date = $request->query('date');
-        return Inertia::render('Teachers/Dashboard/Attendance/Attendance', [
-            'classroom' => $classroom,
-            'students' => $classroom->students,
-            'classId' => $id,
-            'date' => $date,
-        ]);
-    }
-
     public function saveAttendance(Request $request, $id)
     {
-
         try {
             $classroom = ClassRoom::findOrFail($id);
             $attendanceData = $request->input('attendance');
@@ -422,12 +325,6 @@ class TeacherAttendanceController extends Controller
                         throw new \Exception('Invalid status value for student ID: ' . $studentId);
                     }
 
-                    \Log::info('Processing student ID:', [
-                        'id' => $studentId,
-                        'status' => $status,
-                        'lateTime' => $lateTime
-                    ]);
-
                     Attendance::updateOrCreate(
                         [
                             'class_id' => $classroom->id,
@@ -447,5 +344,19 @@ class TeacherAttendanceController extends Controller
             \Log::error('Error saving attendance: ' . $e->getMessage());
             return response()->json(['message' => 'Failed to save attendance: ' . $e->getMessage()], 500);
         }
+    }
+    public function attendance($id, Request $request)
+    {
+        $url = $request->fullUrl();
+        $urlParts = explode('/', $url);
+        $id = $urlParts[count($urlParts) - 2];
+        $classroom = ClassRoom::with('students')->findOrFail($id);
+        $date = $request->query('date');
+        return Inertia::render('Teachers/Dashboard/Attendance/Attendance', [
+            'classroom' => $classroom,
+            'students' => $classroom->students,
+            'classId' => $id,
+            'date' => $date,
+        ]);
     }
 }

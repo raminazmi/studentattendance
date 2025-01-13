@@ -16,6 +16,7 @@ export default {
         extend: {
             fontFamily: {
                 sans: ['Tajawal', ...defaultTheme.fontFamily.sans],
+                almarai: ['Almarai', ...defaultTheme.fontFamily.sans],
             },
             colors: {
                 'primaryColor': {

@@ -25,6 +25,22 @@ class LoginRequest extends FormRequest
         ];
     }
 
+    public function messages(): array
+    {
+        return [
+            'email.required' => 'حقل البريد الإلكتروني مطلوب.',
+            'email.string' => 'يجب أن يكون البريد الإلكتروني نصًا.',
+            'email.email' => 'يجب أن يكون البريد الإلكتروني عنوان بريد إلكتروني صالحًا.',
+
+            'password.required' => 'حقل كلمة المرور مطلوب.',
+            'password.string' => 'يجب أن تكون كلمة المرور نصًا.',
+
+            'role.required' => 'حقل الدور مطلوب.',
+            'role.string' => 'يجب أن يكون الدور نصًا.',
+            'role.in' => 'يجب أن يكون الدور إما أدمن أو معلم.',
+        ];
+    }
+
     public function authenticate(): void
     {
         $this->ensureIsNotRateLimited();
@@ -33,7 +49,7 @@ class LoginRequest extends FormRequest
             RateLimiter::hit($this->throttleKey());
 
             throw ValidationException::withMessages([
-                'email' => trans('auth.failed'),
+                'email' => 'بيانات الاعتماد هذه غير متطابقة مع سجلاتنا.',
             ]);
         }
 
@@ -51,10 +67,7 @@ class LoginRequest extends FormRequest
         $seconds = RateLimiter::availableIn($this->throttleKey());
 
         throw ValidationException::withMessages([
-            'email' => trans('auth.throttle', [
-                'seconds' => $seconds,
-                'minutes' => ceil($seconds / 60),
-            ]),
+            'email' => 'عدد كبير جدًا من محاولات تسجيل الدخول. يرجى المحاولة مرة أخرى بعد ' . ceil($seconds / 60) . ' دقيقة.',
         ]);
     }
 

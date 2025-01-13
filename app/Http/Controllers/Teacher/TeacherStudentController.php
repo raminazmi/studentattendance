@@ -51,7 +51,7 @@ class TeacherStudentController extends Controller
         $urlParts = explode('/', $url);
         $id = $urlParts[count($urlParts) - 2];
         $students = Student::where('class_id', $classId)
-            ->select('id', 'name', 'email', 'phone', 'class_id', 'parent_whatsapp', 'cycle', 'grades', 'path', 'created_at')
+            ->select('id', 'name', 'email', 'phone', 'class_id', 'parent_whatsapp', 'cycle', 'path', 'created_at')
             ->latest()
             ->paginate(9999999999999);
 
@@ -100,23 +100,24 @@ class TeacherStudentController extends Controller
             $validated = $request->validate([
                 'name' => ['required', 'string', 'max:255'],
                 'email' => ['required', 'string', 'email', 'max:255', 'unique:students,email,'],
-                'phone' => ['nullable', 'string', 'max:15'],
+                'phone' => ['required', 'string', 'max:15'],
                 'class_id' => ['required', 'exists:classes,id'],
-                'parent_whatsapp' => ['nullable', 'string', 'max:20'],
-                'cycle' => ['required', 'string'],
-                'grades' => ['required', 'integer'],
+                'parent_whatsapp' => ['required', 'string', 'max:15'],
+                'cycle' => ['required', 'integer'],
                 'path' => ['nullable', 'in:general,advanced'],
             ], [
                 'name.required' => 'حقل الاسم مطلوب',
                 'name.max' => 'يجب ألا يتجاوز الاسم 255 حرفًا',
                 'email.required' => 'حقل البريد الإلكتروني مطلوب',
                 'email.email' => 'يجب أن يكون البريد الإلكتروني صالحًا',
-                'email.unique' => 'البريد الإلكتروني مستخدم بالفعل',
                 'phone.max' => 'يجب ألا يتجاوز رقم الهاتف 15 رقمًا',
+                'phone.required' => 'حقل رقم الهاتف مطلوب',
+                'parent_whatsapp.max' => 'يجب ألا يزيد حقل WhatsApp الرئيسي عن 15 حرفًا.',
+                'parent_whatsapp.required' => 'حقل رقم واتساب ولي الأمر مطلوب',
                 'class_id.required' => 'حقل الصف مطلوب',
                 'class_id.exists' => 'الصف المحدد غير موجود',
-                'cycle.required' => 'حقل الدورة مطلوب',
-                'grades.required' => 'حقل الدرجات مطلوب',
+                'cycle.required' => 'حقل الحلقة مطلوب',
+                'cycle.integer' => 'حقل الحلقة يجب ان يكون رقماً',
                 'path.in' => 'المسار يجب أن يكون إما "عام" أو "متقدم"',
             ]);
 
@@ -129,7 +130,7 @@ class TeacherStudentController extends Controller
 
     public function edit($id)
     {
-        $student = Student::select('id', 'name', 'email', 'phone', 'class_id', 'parent_whatsapp', 'cycle', 'grades', 'path')
+        $student = Student::select('id', 'name', 'email', 'phone', 'class_id', 'parent_whatsapp', 'cycle', 'path')
             ->findOrFail($id);
 
         $classes = ClassRoom::select('id', 'name')->get();
@@ -144,24 +145,25 @@ class TeacherStudentController extends Controller
         try {
             $validated = $request->validate([
                 'name' => ['required', 'string', 'max:255'],
-                'email' => ['required', 'string', 'email', 'max:255', 'unique:students,email,' . $id],
-                'phone' => ['nullable', 'string', 'max:15'],
+                'email' => ['required', 'string', 'email', 'max:255'],
+                'phone' => ['required', 'string', 'max:15'],
                 'class_id' => ['required', 'exists:classes,id'],
-                'parent_whatsapp' => ['nullable', 'string', 'max:20'],
-                'cycle' => ['required', 'string'],
-                'grades' => ['required', 'integer'],
+                'parent_whatsapp' => ['required', 'string', 'max:15'],
+                'cycle' => ['required', 'integer'],
                 'path' => ['nullable', 'in:general,advanced'],
             ], [
                 'name.required' => 'حقل الاسم مطلوب',
                 'name.max' => 'يجب ألا يتجاوز الاسم 255 حرفًا',
                 'email.required' => 'حقل البريد الإلكتروني مطلوب',
                 'email.email' => 'يجب أن يكون البريد الإلكتروني صالحًا',
-                'email.unique' => 'البريد الإلكتروني مستخدم بالفعل',
                 'phone.max' => 'يجب ألا يتجاوز رقم الهاتف 15 رقمًا',
+                'phone.required' => 'حقل رقم الهاتف مطلوب',
+                'parent_whatsapp.max' => 'يجب ألا يزيد حقل WhatsApp الرئيسي عن 15 حرفًا.',
+                'parent_whatsapp.required' => 'حقل رقم واتساب ولي الأمر مطلوب',
                 'class_id.required' => 'حقل الصف مطلوب',
                 'class_id.exists' => 'الصف المحدد غير موجود',
-                'cycle.required' => 'حقل الدورة مطلوب',
-                'grades.required' => 'حقل الدرجات مطلوب',
+                'cycle.required' => 'حقل الحلقة مطلوب',
+                'cycle.integer' => 'حقل الحلقة يجب ان يكون رقماً',
                 'path.in' => 'المسار يجب أن يكون إما "عام" أو "متقدم"',
             ]);
 

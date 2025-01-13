@@ -36,7 +36,7 @@ export default function Login({ status, canResetPassword }) {
             <Head title="Log in" />
             {status && <div className="mb-4 font-medium text-sm text-green-600">{status}</div>}
             <form onSubmit={submit}>
-                  <div className="my-4">
+                <div className="my-4">
                     <InputLabel htmlFor="role" value={t['role']} />
                     <select
                         id="role"
@@ -44,7 +44,6 @@ export default function Login({ status, canResetPassword }) {
                         value={data.role}
                         className={`w-[100%] focus:border-primaryColor focus:ring-primaryColor rounded-md shadow-sm border-none h-[45px] mt-3 ${isDark ? 'bg-DarkBG1 text-TextLight' : 'bg-LightBG2 text-TextDark border-gray-400 border-[0.1px]'} `}
                         onChange={(e) => setData('role', e.target.value)}
-                        required
                     >
                         <option value="" disabled>{t['select_role']}</option>
                         <option value="admin">{t['admin']}</option>
@@ -83,12 +82,6 @@ export default function Login({ status, canResetPassword }) {
                 </div>
 
                 <div className="flex items-center justify-center mt-8 mb-4">
-                    {/* <Link
-                        href="/register" 
-                        className={`${isDark ? 'text-TextLight hover:text-gray-900' : 'text-TextDark hover:text-gray-900'} underline text-sm rounded-md focus:outline-none`}
-                    >
-                        {t['dont_have_an_account']}
-                    </Link> */}
                     <PrimaryButton className="" disabled={processing}>
                         {t['log_in']}
                     </PrimaryButton>

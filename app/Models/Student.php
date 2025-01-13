@@ -16,7 +16,6 @@ class Student extends Model
         'class_id',
         'parent_whatsapp',
         'cycle',
-        'grades',
         'path',
     ];
 

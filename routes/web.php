@@ -16,6 +16,7 @@ use Illuminate\Foundation\Application;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 use App\Http\Controllers\ErrorController;
+use App\Http\Controllers\MessageController;
 
 // Public routes
 Route::get('/', function () {
@@ -34,11 +35,7 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
     // Dashboard
     Route::get('/dashboard/home', [DashboardController::class, 'index'])->name('dashboard');
 
-    // Resource routes
-    Route::resource('teachers', TeacherController::class);
-    Route::resource('students', StudentController::class);
-    Route::resource('classes', ClassRoomController::class);
-    Route::resource('users', UserController::class);
+    Route::post('/send-whatsapp', [MessageController::class, 'sendWhatsAppMessage']);
 
     // Profile routes
     Route::prefix('profile')->name('profile.')->group(function () {
@@ -114,6 +111,7 @@ Route::middleware(['auth', 'teacher'])->prefix('teacher')->name('teacher.')->gro
     Route::get('/change-password', [TeacherDashboardController::class, 'changePassword'])->name('change-password');
     Route::post('/update-password', [TeacherDashboardController::class, 'updatePassword'])->name('update-password');
     Route::get('/classes', [TeacherDashboardController::class, 'classes'])->name('classes');
+    Route::post('/send-whatsapp', [MessageController::class, 'sendWhatsAppMessage']);
 
     // Attendance routes
     Route::prefix('dashboard/attendance')->name('attendance.')->group(function () {
@@ -142,6 +140,10 @@ Route::middleware(['auth', 'teacher'])->prefix('teacher')->name('teacher.')->gro
         Route::put('/{id}', [TeacherStudentController::class, 'update'])->name('update');
         Route::delete('/{id}', [TeacherStudentController::class, 'destroy'])->name('destroy');
         Route::get('/{id}/view', [TeacherStudentController::class, 'view'])->name('view');
+    });
+
+    Route::prefix('dashboard/classes')->name('classes.')->group(function () {
+        Route::get('/getClasses', [ClassRoomController::class, 'getClasses'])->name('getClasses');
     });
 
     // Teacher profile routes

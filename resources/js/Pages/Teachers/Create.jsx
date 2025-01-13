@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { Head, usePage } from '@inertiajs/react';
+import React from 'react';
+import { Head, useForm } from '@inertiajs/react';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import Breadcrumb from '@/Components/Breadcrumb';
 import PrimaryButton from '@/Components/PrimaryButton';
@@ -8,40 +8,21 @@ import TextInput from '@/Components/TextInput';
 import InputError from '@/Components/InputError';
 import { translations } from '@translations';
 import { useSelector } from 'react-redux';
-import { Inertia } from '@inertiajs/inertia';
 
 export default function AddTeacherPage({ auth }) {
-    const { errors: serverErrors } = usePage().props;
-    const [form, setForm] = useState({
+    const { data, setData, post, errors, processing } = useForm({
         name: '',
         email: '',
         phone: ''
     });
-    const [errors, setErrors] = useState({});
-
-    const handleChange = (e) => {
-        const { name, value } = e.target;
-        setForm({ ...form, [name]: value });
-        setErrors({...errors, [name]: ''});
-    };
 
     const handleSubmit = (e) => {
         e.preventDefault();
-        let validationErrors = {};
-        if (!form.name) validationErrors.name = 'حقل الاسم مطلوب';
-        if (!form.email) validationErrors.email = 'حقل البريد الإلكتروني مطلوب';
-        if (!form.phone) validationErrors.phone = 'حقل الهاتف مطلوب';
-
-        if (Object.keys(validationErrors).length > 0) {
-            setErrors(validationErrors);
-            return;
-        }
-
-        Inertia.post('/admin/dashboard/teachers', form, {
+        post('/admin/dashboard/teachers', {
+            preserveScroll: true,
             onError: (errors) => {
-                setErrors(errors);
+                console.log(errors);
             },
-            preserveScroll: true
         });
     };
 
@@ -75,8 +56,8 @@ export default function AddTeacherPage({ auth }) {
                                             type="text"
                                             name="name"
                                             className={`mt-1 block w-full ${isDark ? 'bg-DarkBG1' : 'bg-TextLight'}`}
-                                            value={form.name}
-                                            onChange={handleChange}
+                                            value={data.name}
+                                            onChange={(e) => setData('name', e.target.value)}
                                         />
                                         {errors.name && <InputError message={errors.name} className="mt-2" />}
                                     </div>
@@ -87,8 +68,8 @@ export default function AddTeacherPage({ auth }) {
                                             type="email"
                                             name="email"
                                             className={`mt-1 block w-full ${isDark ? 'bg-DarkBG1' : 'bg-TextLight'}`}
-                                            value={form.email}
-                                            onChange={handleChange}
+                                            value={data.email}
+                                            onChange={(e) => setData('email', e.target.value)}
                                         />
                                         {errors.email && <InputError message={errors.email} className="mt-2" />}
                                     </div>
@@ -100,13 +81,15 @@ export default function AddTeacherPage({ auth }) {
                                         type="tel"
                                         name="phone"
                                         className={`mt-1 block w-full ${isDark ? 'bg-DarkBG1' : 'bg-TextLight'}`}
-                                        value={form.phone}
-                                        onChange={handleChange}
+                                        value={data.phone}
+                                        onChange={(e) => setData('phone', e.target.value)}
                                     />
                                     {errors.phone && <InputError message={errors.phone} className="mt-2" />}
                                 </div>
                                 <div className="flex justify-end">
-                                    <PrimaryButton>{t['save']}</PrimaryButton>
+                                    <PrimaryButton type="submit" disabled={processing}>
+                                        {t['save']}
+                                    </PrimaryButton>
                                 </div>
                             </form>
                         </div>

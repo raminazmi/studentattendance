@@ -33,7 +33,7 @@ export default function TableHeader({
           <th
             key={column.key}
             scope="col"
-            className={`px-6 py-3 text-xs font-medium uppercase tracking-wider`}
+            className={`px-2 py-3 text-xs font-medium uppercase tracking-wider`}
           >
             {column.sortable ? (
               <button

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { useSelector } from "react-redux";
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import Breadcrumb from '@/Components/Breadcrumb';
@@ -9,11 +9,28 @@ import PrimaryButton from '@/Components/PrimaryButton';
 import { router } from '@inertiajs/react';
 import { getStatusMessage } from '@/utils/messageTemplates';
 import { MessageCircleReply } from 'lucide-react';
+import moment from 'moment';
+import axios from 'axios';
+import { ToastContainer, toast } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
 
 export default function AttendanceViewPage({ auth, classroom, attendance, date }) {
     const isDark = useSelector((state) => state.theme.darkMode === "dark");
     const language = useSelector((state) => state.language.current);
     const t = translations[language];
+
+    const dayNames = {
+        Sunday: t["Sunday"],
+        Monday: t["Monday"],
+        Tuesday: t["Tuesday"],
+        Wednesday: t["Wednesday"],
+        Thursday: t["Thursday"],
+        Friday: t["Friday"],
+        Saturday: t["Saturday"],
+    };
+
+    const formattedDate = moment(date).format("YYYY-MM-DD");
+    const dayName = dayNames[moment(date).format("dddd")];
 
     const columns = [
         { key: 'student_name', label: t.student_name, sortable: true },
@@ -38,10 +55,11 @@ export default function AttendanceViewPage({ auth, classroom, attendance, date }
     };
 
     const handleDateSubmit = () => {
-        router.visit(`/admin/dashboard/attendance/${classroom.id}/attendance?date=${date}`);
+        router.visit(`/admin/dashboard/attendance/${classroom.id}/attendance?date=${formattedDate}`);
     };
+
     const handleExportSubmit = () => {
-        window.location.href = `/admin/dashboard/attendance/${classroom.id}/export?date=${date}`;
+        window.location.href = `/admin/dashboard/attendance/${classroom.id}/export?date=${formattedDate}`;
     };
 
     const tableData = attendance.map(record => ({
@@ -61,18 +79,59 @@ export default function AttendanceViewPage({ auth, classroom, attendance, date }
         { label: classroom.name },
     ];
 
-    const generateWhatsAppLink = (row) => {
+    const sendWhatsAppMessage = async (row) => {
         const statusText = React.Children.toArray(row.status.props.children).join(' ');
+        const message = getStatusMessage(statusText, row.student_name, formattedDate, row.notes);
+
         if (row.parent_whatsapp) {
-            const message = getStatusMessage(statusText, row.student_name, date, row.notes); // استخدم statusText بدلاً من row.status
-            return `https://api.whatsapp.com/send?phone=${row.parent_whatsapp}&text=${encodeURIComponent(message)}`;
+            try {
+                const response = await axios.post('/admin/send-whatsapp', {
+                    to: row.parent_whatsapp,
+                    message,
+                }, {
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                });
+
+                if (response.data.success) {
+                    toast.success('تم إرسال الرسالة بنجاح!', {
+                        position: "top-right",
+                        autoClose: 3000,
+                        hideProgressBar: false,
+                        closeOnClick: true,
+                        pauseOnHover: true,
+                        draggable: true,
+                    });
+                } else {
+                    throw new Error(response.data.message);
+                }
+            } catch (error) {
+                toast.error('فشل إرسال الرسالة. يرجى المحاولة مرة أخرى.', {
+                    position: "top-right",
+                    autoClose: 3000,
+                    hideProgressBar: false,
+                    closeOnClick: true,
+                    pauseOnHover: true,
+                    draggable: true,
+                });
+            }
+        } else {
+            toast.warning('لا يوجد رقم واتساب لولي الأمر.', {
+                position: "top-right",
+                autoClose: 3000,
+                hideProgressBar: false,
+                closeOnClick: true,
+                pauseOnHover: true,
+                draggable: true,
+            });
         }
-        return '#';
     };
 
     return (
         <AuthenticatedLayout user={auth.user}>
-            <Head title={`${t.attendance} - ${date}`} />
+            <Head title={`${dayName} - ${formattedDate}`} />
+            <ToastContainer />
             <div className="flex" style={{ height: "calc(100vh - 66px)" }}>
                 <main className="flex-1 overflow-y-auto">
                     <div className="py-6">
@@ -80,7 +139,7 @@ export default function AttendanceViewPage({ auth, classroom, attendance, date }
                             <Breadcrumb items={breadcrumbItems} />
                             <div className='flex justify-between gap-2 px-4'>
                                 <h1 className={`text-3xl mt-3 font-bold ${isDark ? 'text-TextLight' : 'text-TextDark'}`}>
-                                    {`${t.attendance} - ${date}`}
+                                    {`${dayName} (${formattedDate})`}
                                 </h1>
                                 <div className='flex gap-3'>
                                     <PrimaryButton
@@ -108,10 +167,7 @@ export default function AttendanceViewPage({ auth, classroom, attendance, date }
                                 actions={false}
                                 buttons={[{
                                     label: t['send_whatsapp'],
-                                    onClick: (row) => {
-                                        const url = generateWhatsAppLink(row);
-                                        window.open(url, '_blank');
-                                    },
+                                    onClick: (row) => sendWhatsAppMessage(row),
                                     icon: <MessageCircleReply className="w-4 h-4 mx-1" />,
                                     bgColor: 'bg-green-500',
                                     hoverColor: 'bg-green-500',

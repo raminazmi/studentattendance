@@ -13,6 +13,7 @@ import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import { Head } from '@inertiajs/react';
 import { router } from '@inertiajs/react';
+import moment from 'moment';
 
 export default function TeacherAttendancePage({ auth, classroom, students, classId, date }) {
     const isDark = useSelector((state) => state.theme.darkMode === "dark");
@@ -22,19 +23,36 @@ export default function TeacherAttendancePage({ auth, classroom, students, class
     const [error, setError] = useState(null);
     const [isSubmitting, setIsSubmitting] = useState(false);
     const { attendance, handleAttendanceChange, resetAttendance, fetchAttendance, pleaseFillAllAttendance } = useAttendance(students, `/teacher/dashboard/attendance/${classroom.id}/view?date=${date}`);
-   
+    const dayNames = {
+        Sunday: t["Sunday"],
+        Monday: t["Monday"],
+        Tuesday: t["Tuesday"],
+        Wednesday: t["Wednesday"],
+        Thursday: t["Thursday"],
+        Friday: t["Friday"],
+        Saturday: t["Saturday"],
+    };
+
+    const formattedDate = moment(date).format("YYYY-MM-DD");
+    const dayName = dayNames[moment(date).format("dddd")];
+
     useEffect(() => {
         fetchAttendance().catch((error) => {
             console.error("Error fetching attendance:", error);
-            toast.error("Failed to fetch attendance data.");
+            toast.error("فشل في جلب بيانات الحضور.", {
+                position: "top-right",
+                autoClose: 3000,
+            });
         });
     }, []);
+
     const handleSubmit = async () => {
-   if (!pleaseFillAllAttendance()) {
+        if (!pleaseFillAllAttendance()) {
             setError(t.please_fill_all_attendance);
             setShowModal(true);
-            return; 
-    }
+            return;
+        }
+
         setError(null);
         setShowModal(true);
     };
@@ -44,7 +62,10 @@ export default function TeacherAttendancePage({ auth, classroom, students, class
             setIsSubmitting(true);
 
             if (!date || isNaN(new Date(date))) {
-                toast.error("Invalid date provided!");
+                toast.error("التاريخ المقدم غير صالح!", {
+                    position: "top-right",
+                    autoClose: 3000,
+                });
                 return;
             }
 
@@ -55,7 +76,7 @@ export default function TeacherAttendancePage({ auth, classroom, students, class
 
             if (response.data.message) {
                 setShowModal(false);
-                toast.success("Attendance saved successfully!", {
+                toast.success("تم حفظ الحضور بنجاح!", {
                     position: "top-right",
                     autoClose: 3000,
                 });
@@ -64,7 +85,7 @@ export default function TeacherAttendancePage({ auth, classroom, students, class
         } catch (error) {
             console.error("Error saving attendance:", error);
             toast.error(
-                error.response?.data?.message || "Failed to save attendance",
+                error.response?.data?.message || "فشل في حفظ الحضور",
                 {
                     position: "top-right",
                     autoClose: 3000,
@@ -104,14 +125,14 @@ export default function TeacherAttendancePage({ auth, classroom, students, class
 
     return (
         <AuthenticatedLayout user={auth.user}>
-            <Head title={`${t.attendance} - ${date}`} />
+            <Head title={`${dayName} (${formattedDate})`} />
             <div className="flex" style={{ height: "calc(100vh - 66px)" }}>
                 <main className="flex-1 overflow-y-auto">
                     <div className="py-6">
                         <div className="mx-auto px-4 sm:px-6 md:px-14">
                             <Breadcrumb items={breadcrumbItems} />
                             <AttendanceHeader
-                                title={`${t.attendance} - ${date}`}
+                                title={`${dayName} (${formattedDate})`}
                                 onReset={resetAttendance}
                                 onSave={handleSubmit}
                                 translations={t}

@@ -180,7 +180,6 @@ class AttendanceController extends Controller
     }
 
 
-
     public function getAttendanceStatistics()
     {
         return response()->json([
@@ -235,18 +234,30 @@ class AttendanceController extends Controller
 
         if ($period == 'daily') {
             return $attendanceQuery->selectRaw('date, status, count(*) as count')
+                ->whereDate('date', now()->toDateString())
                 ->groupBy('date', 'status')
                 ->orderBy('date')
                 ->get();
         } elseif ($period == 'weekly') {
             return $attendanceQuery->selectRaw('WEEK(date) as week, status, count(*) as count')
+                ->whereBetween('date', [
+                    now()->startOfWeek()->toDateString(),
+                    now()->endOfWeek()->toDateString()
+                ])
                 ->groupByRaw('WEEK(date), status')
                 ->orderBy('week')
                 ->get();
         } elseif ($period == 'monthly') {
             return $attendanceQuery->selectRaw('MONTH(date) as month, status, count(*) as count')
+                ->whereMonth('date', now()->month)
                 ->groupByRaw('MONTH(date), status')
                 ->orderBy('month')
+                ->get();
+        } elseif ($period == 'yearly') {
+            return $attendanceQuery->selectRaw('YEAR(date) as year, status, count(*) as count')
+                ->whereYear('date', now()->year)
+                ->groupByRaw('YEAR(date), status')
+                ->orderBy('year')
                 ->get();
         }
 
@@ -267,6 +278,8 @@ class AttendanceController extends Controller
                 $labels[] = 'Week ' . $attendance->week;
             } elseif ($period == 'monthly') {
                 $labels[] = 'Month ' . $attendance->month;
+            } elseif ($period == 'yearly') {
+                $labels[] = 'Year ' . $attendance->year;
             }
 
             switch ($attendance->status) {

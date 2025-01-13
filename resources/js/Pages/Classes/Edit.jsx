@@ -1,5 +1,5 @@
-import React, { useState, useEffect } from 'react';
-import { Head, usePage } from '@inertiajs/react';
+import React from 'react';
+import { Head, useForm } from '@inertiajs/react';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import Breadcrumb from '@/Components/Breadcrumb';
 import PrimaryButton from '@/Components/PrimaryButton';
@@ -8,40 +8,21 @@ import TextInput from '@/Components/TextInput';
 import InputError from '@/Components/InputError';
 import { translations } from '@translations';
 import { useSelector } from 'react-redux';
-import { Inertia } from '@inertiajs/inertia';
 
 export default function EditClassPage({ auth, classRoom, teachers }) {
-    const { errors: serverErrors } = usePage().props;
-    const [form, setForm] = useState({
+    const { data, setData, put, errors, processing } = useForm({
         name: classRoom.name || '',
         section: classRoom.section || '',
         teacher_id: classRoom.teacher_id || '',
     });
-    const [errors, setErrors] = useState(serverErrors || {});
-
-    const handleChange = (e) => {
-        const { name, value } = e.target;
-        setForm({ ...form, [name]: value });
-        setErrors({...errors, [name]: ''});
-    };
 
     const handleSubmit = (e) => {
         e.preventDefault();
-        let validationErrors = {};
-        if (!form.name) validationErrors.name = 'حقل الاسم مطلوب';
-        if (!form.section) validationErrors.section = 'حقل القسم مطلوب';
-        if (!form.teacher_id) validationErrors.teacher_id = 'حقل المدرس مطلوب';
-
-        if (Object.keys(validationErrors).length > 0) {
-            setErrors(validationErrors);
-            return;
-        }
-
-        Inertia.put(`/admin/dashboard/classes/${classRoom.id}`, form, {
+        put(`/admin/dashboard/classes/${classRoom.id}`, {
+            preserveScroll: true,
             onError: (errors) => {
-                setErrors(errors);
+                console.log(errors);
             },
-            preserveScroll: true
         });
     };
 
@@ -76,8 +57,8 @@ export default function EditClassPage({ auth, classRoom, teachers }) {
                                                 type="text"
                                                 name="name"
                                                 className={`mt-1 block w-full ${isDark ? 'bg-DarkBG1' : 'bg-TextLight'}`}
-                                                value={form.name}
-                                                onChange={handleChange}
+                                                value={data.name}
+                                                onChange={(e) => setData('name', e.target.value)}
                                             />
                                             {errors.name && <InputError message={errors.name} className="mt-2" />}
                                         </div>
@@ -88,8 +69,8 @@ export default function EditClassPage({ auth, classRoom, teachers }) {
                                                 type="text"
                                                 name="section"
                                                 className={`mt-1 block w-full ${isDark ? 'bg-DarkBG1' : 'bg-TextLight'}`}
-                                                value={form.section}
-                                                onChange={handleChange}
+                                                value={data.section}
+                                                onChange={(e) => setData('section', e.target.value)}
                                             />
                                             {errors.section && <InputError message={errors.section} className="mt-2" />}
                                         </div>
@@ -100,8 +81,8 @@ export default function EditClassPage({ auth, classRoom, teachers }) {
                                             id="teacher_id"
                                             name="teacher_id"
                                             className={`w-[100%] focus:border-primaryColor focus:ring-primaryColor rounded-md shadow-sm border-none h-[45px] mt-3 ${isDark ? 'bg-DarkBG1 text-TextLight' : 'bg-LightBG1 text-TextDark border-gray-400 border-[0.1px]'} `}
-                                            value={form.teacher_id}
-                                            onChange={handleChange}
+                                            value={data.teacher_id}
+                                            onChange={(e) => setData('teacher_id', e.target.value)}
                                         >
                                             <option value="" disabled>{t['select_teacher']}</option>
                                             {teachers.map((teacher) => (
@@ -114,7 +95,9 @@ export default function EditClassPage({ auth, classRoom, teachers }) {
                                     </div>
                                 </div>
                                 <div className="flex justify-end">
-                                    <PrimaryButton>{t['save']}</PrimaryButton>
+                                    <PrimaryButton type="submit" disabled={processing}>
+                                        {t['save']}
+                                    </PrimaryButton>
                                 </div>
                             </form>
                         </div>

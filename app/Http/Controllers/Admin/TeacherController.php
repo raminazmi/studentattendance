@@ -39,13 +39,14 @@ class TeacherController extends Controller
             $validated = $request->validate([
                 'name' => ['required', 'string', 'max:255'],
                 'email' => ['required', 'string', 'email', 'max:255', 'unique:teachers', 'unique:users'],
-                'phone' => ['nullable', 'string', 'max:15'],
+                'phone' => ['required', 'string', 'max:15'],
             ], [
                 'name.required' => 'حقل الاسم مطلوب',
                 'name.max' => 'يجب ألا يتجاوز الاسم 255 حرفًا',
                 'email.required' => 'حقل البريد الإلكتروني مطلوب',
                 'email.email' => 'يجب أن يكون البريد الإلكتروني صالحًا',
                 'email.unique' => 'البريد الإلكتروني مستخدم بالفعل',
+                'phone.required' => 'حقل كلمة المرور مطلوب',
                 'phone.max' => 'يجب ألا يتجاوز رقم الهاتف 15 رقمًا'
             ]);
 
@@ -81,20 +82,29 @@ class TeacherController extends Controller
             $validated = $request->validate([
                 'name' => ['required', 'string', 'max:255'],
                 'email' => ['required', 'string', 'email', 'max:255', 'unique:teachers,email,' . $id],
-                'phone' => ['nullable', 'string', 'max:15'],
+                'phone' => ['required', 'string', 'max:15'],
             ], [
                 'name.required' => 'حقل الاسم مطلوب',
                 'name.max' => 'يجب ألا يتجاوز الاسم 255 حرفًا',
                 'email.required' => 'حقل البريد الإلكتروني مطلوب',
                 'email.email' => 'يجب أن يكون البريد الإلكتروني صالحًا',
                 'email.unique' => 'البريد الإلكتروني مستخدم بالفعل',
+                'phone.required' => 'حقل كلمة المرور مطلوب',
                 'phone.max' => 'يجب ألا يتجاوز رقم الهاتف 15 رقمًا'
             ]);
 
             $teacher = Teacher::findOrFail($id);
+            $email = $teacher->email;
+            $user = User::where('email', $email)->first();
+            if ($user) {
+                $user->update([
+                    'name' => $validated['name'],
+                    'email' => $validated['email'],
+                ]);
+            } else {
+                return back()->withErrors(['email' => 'المستخدم المرتبط بهذا البريد الإلكتروني غير موجود.']);
+            }
             $teacher->update($validated);
-
-            session()->flash('success', 'تم تحديث المدرس بنجاح');
 
             return Inertia::location(route('admin.teachers.index'));
         } catch (\Illuminate\Validation\ValidationException $e) {

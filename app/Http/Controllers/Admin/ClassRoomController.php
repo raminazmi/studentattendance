@@ -13,7 +13,7 @@ class ClassRoomController extends Controller
 
     public function index()
     {
-        $classes = ClassRoom::with('teacher')
+        $classes = ClassRoom::with('teacher:id,name')
             ->select('id', 'name', 'section', 'teacher_id', 'created_at')
             ->latest()
             ->paginate(10);
@@ -23,12 +23,12 @@ class ClassRoomController extends Controller
         ]);
     }
 
-
     public function create()
     {
         $teachers = Teacher::select('id', 'name')->get();
+
         return Inertia::render('Classes/Create', [
-            'teachers' => $teachers
+            'teachers' => $teachers,
         ]);
     }
 
@@ -45,14 +45,14 @@ class ClassRoomController extends Controller
                 'section.required' => 'حقل القسم مطلوب',
                 'section.max' => 'يجب ألا يتجاوز القسم 255 حرفًا',
                 'teacher_id.required' => 'حقل المدرس مطلوب',
-                'teacher_id.exists' => 'المدرس المحدد غير موجود'
+                'teacher_id.exists' => 'المدرس المحدد غير موجود',
             ]);
 
             ClassRoom::create($validated);
 
-            return Inertia::location(route('admin.classes.index'));
+            return redirect()->route('admin.classes.index')->with('success', 'تم إنشاء الصف بنجاح.');
         } catch (\Illuminate\Validation\ValidationException $e) {
-            return back()->withErrors($e->errors());
+            return back()->withErrors($e->errors())->withInput();
         }
     }
 
@@ -60,6 +60,7 @@ class ClassRoomController extends Controller
     {
         $classRoom = ClassRoom::select('id', 'name', 'section', 'teacher_id')
             ->findOrFail($id);
+
         $teachers = Teacher::select('id', 'name')->get();
 
         return Inertia::render('Classes/Edit', [
@@ -81,31 +82,33 @@ class ClassRoomController extends Controller
                 'section.required' => 'حقل القسم مطلوب',
                 'section.max' => 'يجب ألا يتجاوز القسم 255 حرفًا',
                 'teacher_id.required' => 'حقل المدرس مطلوب',
-                'teacher_id.exists' => 'المدرس المحدد غير موجود'
+                'teacher_id.exists' => 'المدرس المحدد غير موجود',
             ]);
 
             $classRoom = ClassRoom::findOrFail($id);
             $classRoom->update($validated);
 
-            session()->flash('success', 'تم تحديث الصف بنجاح');
-
-            return Inertia::location(route('admin.classes.index'));
+            return redirect()->route('admin.classes.index')->with('success', 'تم تحديث الصف بنجاح.');
         } catch (\Illuminate\Validation\ValidationException $e) {
-            return back()->withErrors($e->errors());
+            return back()->withErrors($e->errors())->withInput();
         }
     }
 
     public function destroy($id)
     {
-        $ClassRoom = ClassRoom::findOrFail($id);
-        $ClassRoom->delete();
+        try {
+            $classRoom = ClassRoom::findOrFail($id);
+            $classRoom->delete();
 
-        return Inertia::location(route('admin.classes.index'));
+            return redirect()->route('admin.classes.index')->with('success', 'تم حذف الصف بنجاح.');
+        } catch (\Exception $e) {
+            return redirect()->route('admin.classes.index')->with('error', 'حدث خطأ أثناء حذف الصف.');
+        }
     }
 
     public function getClasses()
     {
-        $classes = ClassRoom::all();
+        $classes = ClassRoom::select('id', 'name', 'section', 'teacher_id')->get();
         return response()->json($classes, 200);
     }
 }

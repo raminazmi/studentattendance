@@ -18,7 +18,7 @@ export default function TablePagination({
   const isRTL = language === 'ar';
 
   return (
-    <div className={`flex items-center justify-between px-4 py-3 ${isDark ? 'bg-DarkBG1 text-TextLight divide-DarkBG1' : 'bg-LightBG1 text-TextDark divide-LightBG3'}`}>
+    <div className={`flex flex-wrap items-center justify-between min-sm:justify-center px-4 py-3 ${isDark ? 'bg-DarkBG1 text-TextLight divide-DarkBG1' : 'bg-LightBG1 text-TextDark divide-LightBG3'}`}>
       <div className="flex items-center">
         <span className="text-sm">
           {t['showing']} {(currentPage - 1) * perPage + 1} {t['to']} {Math.min(currentPage * perPage, total)} {t['of']} {total} {t['results']}

@@ -1,18 +1,16 @@
-import React, { useState } from 'react';
-import { Head, usePage } from '@inertiajs/react';
+import React from 'react';
+import { Head, useForm } from '@inertiajs/react';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import Breadcrumb from '@/Components/Breadcrumb';
 import PrimaryButton from '@/Components/PrimaryButton';
-import { translations } from '@translations';
-import { useSelector } from 'react-redux';
-import { Inertia } from '@inertiajs/inertia';
 import InputLabel from '@/Components/InputLabel';
 import TextInput from '@/Components/TextInput';
 import InputError from '@/Components/InputError';
+import { translations } from '@translations';
+import { useSelector } from 'react-redux';
 
 export default function TeacherAddStudentPage({ auth, classes, classId }) {
-    const { errors: serverErrors } = usePage().props;
-    const [form, setForm] = useState({
+    const { data, setData, post, errors, processing } = useForm({
         name: '',
         email: '',
         phone: '',
@@ -22,37 +20,14 @@ export default function TeacherAddStudentPage({ auth, classes, classId }) {
         grades: 0,
         path: 'general',
     });
-    const [errors, setErrors] = useState({});
-
-    const handleChange = (e) => {
-        const { name, value } = e.target;
-        setForm({ ...form, [name]: value });
-        setErrors({ ...errors, [name]: '' });
-    };
 
     const handleSubmit = (e) => {
         e.preventDefault();
-        let validationErrors = {};
-
-        if (!form.name) validationErrors.name = 'حقل الاسم مطلوب';
-        if (!form.email) validationErrors.email = 'حقل البريد الإلكتروني مطلوب';
-        if (!form.phone) validationErrors.phone = 'حقل الهاتف مطلوب';
-        if (!form.class_id) validationErrors.class_id = 'حقل الصف مطلوب';
-        if (!form.parent_whatsapp) validationErrors.parent_whatsapp = 'حقل واتساب ولي الأمر مطلوب';
-        if (!form.cycle) validationErrors.cycle = 'حقل الدورة مطلوب';
-        if (form.grades === null || form.grades === '') validationErrors.grades = 'حقل الدرجات مطلوب';
-        if (!form.path) validationErrors.path = 'حقل المسار مطلوب';
-
-        if (Object.keys(validationErrors).length > 0) {
-            setErrors(validationErrors);
-            return;
-        }
-
-        Inertia.post('/teacher/dashboard/students', form, {
-            onError: (errors) => {
-                setErrors(prevErrors => ({ ...prevErrors, ...errors }));
-            },
+        post('/teacher/dashboard/students', {
             preserveScroll: true,
+            onError: (errors) => {
+                console.log(errors);
+            },
         });
     };
 
@@ -87,8 +62,8 @@ export default function TeacherAddStudentPage({ auth, classes, classId }) {
                                                 type="text"
                                                 name="name"
                                                 className={`mt-1 block w-full ${isDark ? 'bg-DarkBG1' : 'bg-TextLight'}`}
-                                                value={form.name}
-                                                onChange={handleChange}
+                                                value={data.name}
+                                                onChange={(e) => setData('name', e.target.value)}
                                             />
                                             {errors.name && <InputError message={errors.name} className="mt-2" />}
                                         </div>
@@ -99,8 +74,8 @@ export default function TeacherAddStudentPage({ auth, classes, classId }) {
                                                 type="email"
                                                 name="email"
                                                 className={`mt-1 block w-full ${isDark ? 'bg-DarkBG1' : 'bg-TextLight'}`}
-                                                value={form.email}
-                                                onChange={handleChange}
+                                                value={data.email}
+                                                onChange={(e) => setData('email', e.target.value)}
                                             />
                                             {errors.email && <InputError message={errors.email} className="mt-2" />}
                                         </div>
@@ -113,8 +88,8 @@ export default function TeacherAddStudentPage({ auth, classes, classId }) {
                                                 name="class_id"
                                                 disabled
                                                 className={`w-[100%] focus:border-primaryColor focus:ring-primaryColor rounded-md shadow-sm border-none h-[45px] mt-3 ${isDark ? 'bg-DarkBG1 text-TextLight' : 'bg-LightBG1 text-TextDark border-gray-400 border-[0.1px]'} `}
-                                                value={form.class_id}
-                                                onChange={handleChange}
+                                                value={data.class_id}
+                                                onChange={(e) => setData('class_id', e.target.value)}
                                             >
                                                 <option value="" disabled>{t['select_class']}</option>
                                                 {classes.map((classItem) => (
@@ -132,8 +107,8 @@ export default function TeacherAddStudentPage({ auth, classes, classId }) {
                                                 type="tel"
                                                 name="phone"
                                                 className={`mt-1 block w-full ${isDark ? 'bg-DarkBG1' : 'bg-TextLight'}`}
-                                                value={form.phone}
-                                                onChange={handleChange}
+                                                value={data.phone}
+                                                onChange={(e) => setData('phone', e.target.value)}
                                             />
                                             {errors.phone && <InputError message={errors.phone} className="mt-2" />}
                                         </div>
@@ -146,8 +121,8 @@ export default function TeacherAddStudentPage({ auth, classes, classId }) {
                                                 type="tel"
                                                 name="parent_whatsapp"
                                                 className={`mt-1 block w-full ${isDark ? 'bg-DarkBG1' : 'bg-TextLight'}`}
-                                                value={form.parent_whatsapp}
-                                                onChange={handleChange}
+                                                value={data.parent_whatsapp}
+                                                onChange={(e) => setData('parent_whatsapp', e.target.value)}
                                             />
                                             {errors.parent_whatsapp && <InputError message={errors.parent_whatsapp} className="mt-2" />}
                                         </div>
@@ -158,43 +133,31 @@ export default function TeacherAddStudentPage({ auth, classes, classId }) {
                                                 name="cycle"
                                                 type="number"
                                                 className={`mt-1 block w-full ${isDark ? 'bg-DarkBG1' : 'bg-TextLight'}`}
-                                                value={form.cycle}
-                                                onChange={handleChange}
+                                                value={data.cycle}
+                                                onChange={(e) => setData('cycle', e.target.value)}
                                             />
                                             {errors.cycle && <InputError message={errors.cycle} className="mt-2" />}
                                         </div>
                                     </div>
-                                    <div className='flex justify-between gap-6'>
-                                        <div className='w-full'>
-                                            <InputLabel value={t['grades']} />
-                                            <TextInput
-                                                id="grades"
-                                                name="grades"
-                                                type="number"
-                                                className={`mt-1 block w-full ${isDark ? 'bg-DarkBG1' : 'bg-TextLight'}`}
-                                                value={form.grades}
-                                                onChange={handleChange}
-                                            />
-                                            {errors.grades && <InputError message={errors.grades} className="mt-2" />}
-                                        </div>
-                                        <div className='w-full'>
-                                            <InputLabel value={t['path']} />
-                                            <select
-                                                id="path"
-                                                name="path"
-                                                className={`w-[100%] focus:border-primaryColor focus:ring-primaryColor rounded-md shadow-sm border-none h-[45px] mt-3 ${isDark ? 'bg-DarkBG1 text-TextLight' : 'bg-LightBG1 text-TextDark border-gray-400 border-[0.1px]'} `}
-                                                value={form.path}
-                                                onChange={handleChange}
-                                            >
-                                                <option value="general">{t['general']}</option>
-                                                <option value="advanced">{t['advanced']}</option>
-                                            </select>
-                                            {errors.path && <InputError message={errors.path} className="mt-2" />}
-                                        </div>
+                                    <div className='w-full'>
+                                        <InputLabel value={t['path']} />
+                                        <select
+                                            id="path"
+                                            name="path"
+                                            className={`w-[100%] focus:border-primaryColor focus:ring-primaryColor rounded-md shadow-sm border-none h-[45px] mt-3 ${isDark ? 'bg-DarkBG1 text-TextLight' : 'bg-LightBG1 text-TextDark border-gray-400 border-[0.1px]'} `}
+                                            value={data.path}
+                                            onChange={(e) => setData('path', e.target.value)}
+                                        >
+                                            <option value="general">{t['general']}</option>
+                                            <option value="advanced">{t['advanced']}</option>
+                                        </select>
+                                        {errors.path && <InputError message={errors.path} className="mt-2" />}
                                     </div>
                                 </div>
                                 <div className="flex justify-end">
-                                    <PrimaryButton>{t['save']}</PrimaryButton>
+                                    <PrimaryButton type="submit" disabled={processing}>
+                                        {t['save']}
+                                    </PrimaryButton>
                                 </div>
                             </form>
                         </div>

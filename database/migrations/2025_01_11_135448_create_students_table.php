@@ -15,8 +15,7 @@ return new class extends Migration
             $table->string('phone', 15)->nullable()->comment('رقم الهاتف مع رمز الدولة');
             $table->foreignId('class_id')->constrained('classes')->onDelete('cascade')->comment('معرف الصف الذي ينتمي إليه الطالب');
             $table->string('parent_whatsapp')->nullable()->comment('رقم الواتساب للولي');
-            $table->string('cycle')->comment('الدورة الدراسية');
-            $table->integer('grades')->comment('درجات الطالب');
+            $table->integer('cycle')->comment('الحلقة');
             $table->enum('path', ['general', 'advanced'])->nullable()->comment('المسار الدراسي: عام أو متقدم');
             $table->timestamps();
         });

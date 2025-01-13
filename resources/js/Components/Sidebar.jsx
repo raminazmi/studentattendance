@@ -3,33 +3,33 @@ import { Link, usePage } from '@inertiajs/react';
 import { useSelector } from 'react-redux';
 import {
   HomeIcon,
-  ComputerDesktopIcon,
-  CheckCircleIcon,
-  AcademicCapIcon,
-  PresentationChartLineIcon,
+  ClipboardDocumentCheckIcon,
+  UserGroupIcon,
+  UsersIcon,
+  BuildingLibraryIcon,
 } from '@heroicons/react/24/outline';
 import { translations } from '@translations';
 
 
-export default function Sidebar({role, className}) {
+export default function Sidebar({ role, className }) {
   const isDark = useSelector((state) => state.theme.darkMode === "dark");
   const language = useSelector((state) => state.language.current);
   const t = translations[language];
   const { url } = usePage();
 
-  const navigation = role === "teacher"
+ const navigation = role === "teacher"
     ? [
-        { name: t['dashboard'], href: '/teacher/dashboard/home', icon: HomeIcon },
-        { name: t['attendance'], href: '/teacher/dashboard/attendance', icon: CheckCircleIcon },
-        { name: t['student_management'], href: '/teacher/dashboard/students', icon: PresentationChartLineIcon },
-      ]
+      { name: t['dashboard'], href: '/teacher/dashboard/home', icon: HomeIcon },
+      { name: t['attendance'], href: '/teacher/dashboard/attendance', icon: ClipboardDocumentCheckIcon },
+      { name: t['student_management'], href: '/teacher/dashboard/students', icon: UserGroupIcon },
+    ]
     : [
-        { name: t['dashboard'], href: '/admin/dashboard/home', icon: HomeIcon },
-        { name: t['attendance'], href: '/admin/dashboard/attendance', icon: CheckCircleIcon },
-        { name: t['classroom_management'], href: '/admin/dashboard/classes', icon: ComputerDesktopIcon },
-        { name: t['teachers_management'], href: '/admin/dashboard/teachers', icon: PresentationChartLineIcon },
-        { name: t['student_management'], href: '/admin/dashboard/students', icon: AcademicCapIcon },
-      ];
+      { name: t['dashboard'], href: '/admin/dashboard/home', icon: HomeIcon },
+      { name: t['attendance'], href: '/admin/dashboard/attendance', icon: ClipboardDocumentCheckIcon },
+      { name: t['teachers_management'], href: '/admin/dashboard/teachers', icon: UsersIcon },
+      { name: t['classroom_management'], href: '/admin/dashboard/classes', icon: BuildingLibraryIcon },
+      { name: t['student_management'], href: '/admin/dashboard/students', icon: UserGroupIcon },
+    ];
 
   return (
     <div className={`flex flex-col min-w-[230px] ${className} ${isDark ? 'bg-DarkBG2' : 'bg-LightBG2'} border-gray-200`} style={{ height: "calc(100vh - 66px)" }}>
